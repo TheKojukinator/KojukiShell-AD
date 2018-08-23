@@ -6,7 +6,7 @@
     PowerShellVersion = '5.1'
     RequiredModules   = @('ActiveDirectory')
     NestedModules     = @(
-        '.\functions\Add-AccessRightsAdmin.ps1',
+        #'.\functions\Add-AccessRightsAdmin.ps1',
         '.\functions\Get-ADNestedMembership.ps1',
         '.\functions\Get-GPOLinked.ps1',
         '.\functions\Test-PSCredential.ps1'

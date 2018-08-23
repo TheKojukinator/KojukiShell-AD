@@ -138,5 +138,5 @@ Function Add-AccessRightsAdmin {
     }
 } # Add-AccessRightsAdmin
 
-Add-AccessRightsAdmin "exa" "it-tss-138m"
-Add-AccessRightsAdmin "TSS-WM-Role-AutomationAdmin" "it-tss-529m"
+#Add-AccessRightsAdmin "exa" "it-tss-138m"
+#Add-AccessRightsAdmin "TSS-WM-Role-AutomationAdmin" "it-tss-529m"
