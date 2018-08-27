@@ -98,7 +98,7 @@ Function Get-GPOLinked {
                             }
                         } catch {
                             # if we had trouble reading the GPO, print out a warning
-                            Write-Warning "Can't read $guid linked in: $($ou.DistinguishedName)"
+                            Write-Warning "Can't read [$guid] linked in [$($ou.DistinguishedName)]"
                         }
                         # if $obj is good, try and add a default property set to it
                         if ($obj) {
