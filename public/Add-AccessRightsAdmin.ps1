@@ -1,19 +1,16 @@
 Function Add-AccessRightsAdmin {
     <#
     .SYNOPSIS
-    Todo
-
+        Todo
     .DESCRIPTION
-    Todo
-
+        Todo
     .EXAMPLE
-    Add-AccessRightsAdmin "exa" "it-tss-138m"
-
+        Add-AccessRightsAdmin "exa" "it-tss-138m"
     .EXAMPLE
-    Add-AccessRightsAdmin "TSS-WM-Role-AutomationAdmin" "it-tss-529m"
+        Add-AccessRightsAdmin "TSS-WM-Role-AutomationAdmin" "it-tss-529m"
     #>
     [CmdletBinding()]
-    Param(
+    param(
         [Parameter(Position = 0, Mandatory)]
         [ValidateScript( {
                 # identity needs to be an existing AD User or Group
@@ -28,7 +25,7 @@ Function Add-AccessRightsAdmin {
         [string] $Computer,
         [PSCredential] $Credential
     )
-    Process {
+    process {
         try {
             [System.DirectoryServices.AccountManagement]::
             # determine the domain netbios name for use in "domain\identity" strings

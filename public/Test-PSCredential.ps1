@@ -1,29 +1,26 @@
-# load the necessary assemblies
-Add-Type -AssemblyName System.DirectoryServices.AccountManagement
 Function Test-PSCredential {
     <#
     .SYNOPSIS
-    Test PSCredential against local domain.
-
+        Test PSCredential against local domain.
     .DESCRIPTION
-    This function leverages [System.DirectoryServices.AccountManagement] to validate the provided PSCredential(s).
-
+        This function leverages [System.DirectoryServices.AccountManagement] to validate the provided PSCredential(s).
     .INPUTS
-    PSCredential(s) can be provided via pipeline.
-
+        PSCredential(s) can be provided via pipeline.
     .OUTPUTS
-    [bool] $true if validation succeeds, otherwise $false.
-
+        [bool] $true if validation succeeds, otherwise $false.
     .EXAMPLE
-    Get-Credential | Test-PSCredential
-    True
+        Get-Credential | Test-PSCredential
+        True
     #>
     [CmdletBinding()]
-    Param(
+    param(
         [Parameter(Position = 0, Mandatory, ValueFromPipeline)]
         [PSCredential[]] $Credential
     )
-    Process {
+    begin {
+        Add-Type -AssemblyName System.DirectoryServices.AccountManagement
+    }
+    process {
         try {
             $domain = (Get-ADDomain).NetBIOSName
             if (!$domain) {

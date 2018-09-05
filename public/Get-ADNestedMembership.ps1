@@ -1,53 +1,42 @@
 Function Get-ADNestedMembership {
     <#
     .SYNOPSIS
-    Generate membership structure for AD object(s).
-
+        Generate membership structure for AD object(s).
     .DESCRIPTION
-    This function parses an AD object's Member attribute down the chain, or MemberOf up the chain, and generates a human readable table.
+        This function parses an AD object's Member attribute down the chain, or MemberOf up the chain, and generates a human readable table.
 
-    The following columns are included in the table:
-        Index           : Line numbers for readability, and to reference from Status messages.
-        MembershipTree  : Tree-style view of the membership structure.
-        Status          : Shows duplicate and looping information, along with relevant Index number.
-        MembershipPath  : Absolute-path view of the membership structure.
+        The following columns are included in the table:
+            Index           : Line numbers for readability, and to reference from Status messages.
+            MembershipTree  : Tree-style view of the membership structure.
+            Status          : Shows duplicate and looping information, along with relevant Index number.
+            MembershipPath  : Absolute-path view of the membership structure.
 
-    When using DontFormat parameter, the returned objects include the sAMAccountName of the root Identity, helpful if parsing many items from the pipeline.
-
+        When using DontFormat parameter, the returned objects include the sAMAccountName of the root Identity, helpful if parsing many items from the pipeline.
     .PARAMETER Identity
-    Identity(y/ies) of the AD object(s) to process. Must match sAMAccountName AD attribute.
-
+        Identity(y/ies) of the AD object(s) to process. Must match sAMAccountName AD attribute.
     .PARAMETER Action
-    Select whether to process Member or MemberOf. Defaults to Member if omitted.
-
+        Select whether to process Member or MemberOf. Defaults to Member if omitted.
     .PARAMETER DontFormat
-    Output unformatted objects instead of a table.
-
+        Output unformatted objects instead of a table.
     .INPUTS
-    Identit(y/ies) can be provided via pipeline.
-
+        Identit(y/ies) can be provided via pipeline.
     .OUTPUTS
-    [String] containing the full table, or
-    [PSCustomObject] for each membership item, when using DontFormat parameter.
-
+        [String] containing the full table, or
+        [PSCustomObject] for each membership item, when using DontFormat parameter.
     .EXAMPLE
-    Get-ADNestedMembership "SomeUser"
-
+        Get-ADNestedMembership "SomeUser"
     .EXAMPLE
-    Get-ADNestedMembership "SomeUser" -Action MemberOf
-
+        Get-ADNestedMembership "SomeUser" -Action MemberOf
     .EXAMPLE
-    "SomeUser", "SomeComputer", "SomeGroup" | Get-ADNestedMembership | Out-File "Member.txt" -Encoding utf8
-
+        "SomeUser", "SomeComputer", "SomeGroup" | Get-ADNestedMembership | Out-File "Member.txt" -Encoding utf8
     .EXAMPLE
-    "SomeUser", "SomeComputer", "SomeGroup" | Get-ADNestedMembership -DontFormat | Export-Csv "Member.csv" -Encoding utf8 -NoTypeInformation
-
+        "SomeUser", "SomeComputer", "SomeGroup" | Get-ADNestedMembership -DontFormat | Export-Csv "Member.csv" -Encoding utf8 -NoTypeInformation
     .EXAMPLE
-    "SomeUser", "SomeComputer", "SomeGroup" | Get-ADNestedMembership -Action MemberOf -DontFormat | Export-Csv "MemberOf.csv" -Encoding utf8 -NoTypeInformation
+        "SomeUser", "SomeComputer", "SomeGroup" | Get-ADNestedMembership -Action MemberOf -DontFormat | Export-Csv "MemberOf.csv" -Encoding utf8 -NoTypeInformation
     #>
     [CmdletBinding()]
     [OutputType([String], [PSCustomObject])]
-    Param(
+    param(
         [Parameter(Position = 0, Mandatory, ValueFromPipeline)]
         [ValidateScript( {
                 # identity needs to be an existing AD User, Group, or Computer object
@@ -59,12 +48,12 @@ Function Get-ADNestedMembership {
         [string] $Action = "Member",
         [switch] $DontFormat
     )
-    Begin {
+    begin {
         # define Get-Data to do the grunt-work so we can have recursion and support formatting the output objects at the end
         Function Get-Data {
             [CmdletBinding()]
             [OutputType([PSCustomObject])]
-            Param(
+            param(
                 [Parameter(Position = 0, Mandatory)]
                 [Microsoft.ActiveDirectory.Management.ADObject] $Identity,
                 [Parameter(Position = 1)]
@@ -74,7 +63,7 @@ Function Get-ADNestedMembership {
                 [PSCustomObject[]] $HistoryChain = @(),
                 [int] $Depth = 0
             )
-            Process {
+            process {
                 try {
                     # generate the output object
                     $objOut = [PSCustomObject][Ordered]@{
@@ -95,13 +84,10 @@ Function Get-ADNestedMembership {
                         MembershipPath = $(@(if ($HistoryChain.sAMAccountName) {$HistoryChain.sAMAccountName}) + @($Identity.sAMAccountName)) -join "\"
                         CanonicalName  = $Identity.CanonicalName
                     }
-                    # define string array of the default properties
+                    # configure DefaultDisplayPropertySet for the custom object we made
                     [string[]]$defaultProperties = "Index", "MembershipTree", "Status", "MembershipPath"
-                    # turn it in to a DefaultDisplayPropertySet
                     $defaultPropertySet = New-Object System.Management.Automation.PSPropertySet DefaultDisplayPropertySet, $defaultProperties
-                    # turn that in to a member set
                     $defaultMembers = [System.Management.Automation.PSMemberInfo[]]$defaultPropertySet
-                    # add the member set to the output object
                     Add-Member -InputObject $objOut -MemberType MemberSet -Name PSStandardMembers -Value $defaultMembers
                     <#
                         When piping an Array in to a cmdlet parameter it gets scoped differently than piping to ForEach-Object and using the cmdlet inside the scriptblock. Mainly, the former will treat the Array like a static variable, and appending values at any function recursion level will continuously add items to the Array. However, in the latter case of ForEach-Object, the Array inside the scriptblock will only inherit the members from the parent function call during recursion.
@@ -128,7 +114,6 @@ Function Get-ADNestedMembership {
                     # put the output object on the pipeline
                     $objOut
                     # if the object is looping or duplicate, return from the function so we don't continue recursing
-                    #if (@("Looping", "Duplicate") -contains $objOut.Status) { return }
                     if ($objOut.Status -match "Looping*|Duplicate*") { return }
                     # recurse if $Action isn't empty, make sure to get sAMAccountName, CanonicalName, and $Action from Get-ADObject
                     $Identity.$Action | Get-ADObject -Properties sAMAccountName, CanonicalName, $Action | Sort-Object Name | ForEach-Object {
@@ -151,13 +136,13 @@ Function Get-ADNestedMembership {
             }
         } # Get-Data
     }
-    Process {
+    process {
         try {
             # recast Identity as ADObject and get it, along with properties sAMAccountName, CanonicalName, and $Action
             # the -or "$Itentity$" is to match computer objects, since they have a '$' at the end of their sAMAccountName
             [Microsoft.ActiveDirectory.Management.ADObject]$Identity = Get-ADObject -Filter "sAMAccountName -eq `"$Identity`" -or sAMAccountName -eq `"$Identity$`"" -Properties sAMAccountName, CanonicalName, $Action
             if ($DontFormat) {
-                # if we don't want to format, just get the objects
+                # if we don't want to format, just get the objects on the pipeline
                 Get-Data -Identity $Identity -Action $Action
             } else {
                 # get the output from Get-Data, format it as a table, and then convert it to string with plenty of width
