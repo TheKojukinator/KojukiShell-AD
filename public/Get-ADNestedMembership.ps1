@@ -68,20 +68,21 @@ Function Get-ADNestedMembership {
                     # generate the output object
                     $objOut = [PSCustomObject][Ordered]@{
                         # keep track of the root object's sAMAccountName, will be useful if processing multiple items from the pipeline and not formatting the output
-                        sAMAccountName = $(if ($HistoryChain.sAMAccountName) { @($HistoryChain.sAMAccountName)[0] } else { $Identity.sAMAccountName })
+                        sAMAccountName = $(if (Test-Property $HistoryChain "sAMAccountName") { @($HistoryChain.sAMAccountName)[0] } else { $Identity.sAMAccountName })
                         Index          = $HistoryFull.Count
                         # pad the Identity name based on Depth
                         MembershipTree = $(if ($Depth) { "    " + "|   " * ($Depth - 1) }) + $Identity.Name
                         # assign appropriate Status and Details for looping and duplicate states
-                        Status         = $(
-                            if ($HistoryChain.DistinguishedName -contains $Identity.DistinguishedName) {
-                                "Looping @ $($HistoryFull.DistinguishedName.IndexOf($Identity.DistinguishedName))"
-                            } elseif ($HistoryFull.DistinguishedName -contains $Identity.DistinguishedName) {
-                                "Duplicate @ $($HistoryFull.DistinguishedName.IndexOf($Identity.DistinguishedName))"
-                            } else { $null }
+                        Status         = $(if (Test-Property $HistoryChain "DistinguishedName") {
+                                if ($HistoryChain.DistinguishedName -contains $Identity.DistinguishedName) {
+                                    "Looping @ $($HistoryFull.DistinguishedName.IndexOf($Identity.DistinguishedName))"
+                                } elseif ($HistoryFull.DistinguishedName -contains $Identity.DistinguishedName) {
+                                    "Duplicate @ $($HistoryFull.DistinguishedName.IndexOf($Identity.DistinguishedName))"
+                                } else { $null }
+                            }
                         )
                         # generate membership path from the current HistoryChain names (if any) and Identity name (cast to arrays just in case we have single items)
-                        MembershipPath = $(@(if ($HistoryChain.sAMAccountName) {$HistoryChain.sAMAccountName}) + @($Identity.sAMAccountName)) -join "\"
+                        MembershipPath = $(@(if (Test-Property $HistoryChain "sAMAccountName") {$HistoryChain.sAMAccountName}) + @($Identity.sAMAccountName)) -join "\"
                         CanonicalName  = $Identity.CanonicalName
                     }
                     # configure DefaultDisplayPropertySet for the custom object we made
