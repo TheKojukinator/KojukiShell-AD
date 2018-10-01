@@ -53,7 +53,7 @@ Function Add-AccessRightsAdmin {
             $newGroup.clsid = "{6D4A79E4-529C-4481-ABD0-F5BD7EA93BA7}"
             $newGroup.name = "Administrators (built-in)"
             $newGroup.image = "2"
-            $newGroup.changed = "$(Get-Date -f "yyyy-MM-dd hh:mm:ss")"
+            $newGroup.changed = "$(Get-Date -f "yyyy-MM-dd HH:mm:ss")"
             $newGroup.uid = "{$([guid]::NewGuid().ToString().ToUpper())}"
             $newGroup.userContext = "0"
             $newGroup.removePolicy = "0"
